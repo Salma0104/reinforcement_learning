@@ -5,18 +5,21 @@ import matplotlib.pyplot as plt
 import csv
 
 class NeuralNet:
-    # WHOLE POINT IS TO MAKE NN GOOD AT ESTIMATING Q VALUES FOR A GIVEN STATE
-    # This multi-layer perceptron will take a vector describing the current state of the baord
-    # It will output a vector that contains each Q value for an action a on the current state
+    '''
+        Parameters
+        ----------
+        n_input: int
+            number of neurons in input layer
+        
+        n_hidden: int
+            number of neurons in hidden layer
+
+        n_output: int
+            number of neurons in output layer
+    '''
     def __init__(self,n_input,n_hidden,n_output, lr) -> None:
-        # defining layers to nn
-        # size of input layer
         self.n_input = n_input
-        # input_layer will be vector describing current state of board (feature)
-        # Helps extract more meaningful info from input feature
         self.n_hidden = n_hidden
-        # n_output will be a vector containing the estimated Q values for each action on current state
-        # number of neurons in output = number of actions possible for current state
         self.n_output = n_output
 
         # defining initial weights for nn (Using Xavier initialization)
@@ -30,7 +33,17 @@ class NeuralNet:
         # Learning Rate
         self.lr = lr
     
-    # returns a vector containing estimated q values for each action for the current state
+    '''
+        Parameters
+        ----------
+        input-layer: np.array
+            vector describing the current state of the board
+        
+        Returns
+        -------
+        output: np.array
+            vector containing list of estimated Qvalues
+    '''
     def forward(self, input_layer):
         # Activation: input layer -> hidden layer (weight * input) + bias
         h1 = np.dot(self.W1,input_layer) + self.b_W1
@@ -41,20 +54,29 @@ class NeuralNet:
         # apply sigmoid
         output = 1/(1+np.exp(-h2))
         
-        # output contains the estmated Q values
         return output
 
-    # gradient, update weights and biases of nn
+    
+    '''
+        Parameters
+        ----------
+        estimate: np.array
+            Estimated Qvalues for current state <- output of forward
+        
+        desired: np.array
+            desired Qvalues based on either Q-learning or SARSA
+
+        input-layer: np.array
+            vector describing the current state of the board
+    '''
     def backward(self, estimate, desired, input_layer):
         # Compute the error signal
         err = desired - estimate
-
         # Backpropagation: output -> hidden
         delta2 = estimate*(1-estimate) * err
 
-
+        # compute activation for input layer -> hidden layer
         h1 = np.dot(self.W1,input_layer) + self.b_W1
-        
         # apply sigmoid activation function
         fh1 = 1/(1+np.exp(-h1))
 
@@ -64,12 +86,16 @@ class NeuralNet:
 
         # Backpropagation: hidden -> input
         delta1 = fh1*(1-fh1) * np.dot(self.W2.T,delta2)
+
+        # Compute gradient for W2 and b_W2
         dW1 = np.outer(delta1, input_layer)
         db_W1 = delta1
 
+        # update weights and biases
         self.W1 += self.lr * dW1
         self.W2 += self.lr * dW2
 
         self.b_W1 += self.lr * db_W1
         self.b_W2 += self.lr * db_W2
+
 
